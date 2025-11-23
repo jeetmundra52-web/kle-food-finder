@@ -1,0 +1,35 @@
+const mongoose = require('mongoose');
+
+const UserSchema = new mongoose.Schema({
+    name: {
+        type: String,
+        required: false // Optional for vendors, required for students via frontend validation
+    },
+    email: {
+        type: String,
+        required: true,
+        unique: true
+    },
+    password: {
+        type: String,
+        required: true
+    },
+    role: {
+        type: String,
+        enum: ['student', 'vendor', 'admin'],
+        default: 'student'
+    },
+    date: {
+        type: Date,
+        default: Date.now
+    },
+    menu: [{
+        name: { type: String, required: true },
+        price: { type: Number, required: true },
+        category: { type: String, required: true },
+        isVeg: { type: Boolean, default: true },
+        description: { type: String }
+    }]
+});
+
+module.exports = mongoose.model('User', UserSchema);

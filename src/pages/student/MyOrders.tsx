@@ -1,0 +1,129 @@
+import { useState, useEffect } from "react";
+import Navbar from "@/components/Navbar";
+import { useAuth } from "@/hooks/useAuth";
+import { Badge } from "@/components/ui/badge";
+import { Clock, CheckCircle2, XCircle, ChevronRight } from "lucide-react";
+
+interface OrderItem {
+    name: string;
+    quantity: number;
+    price: number;
+}
+
+interface Order {
+    _id: string;
+    vendor: {
+        name: string;
+    };
+    items: OrderItem[];
+    totalAmount: number;
+    status: 'pending' | 'accepted' | 'completed' | 'declined';
+    date: string;
+    paymentMethod: string;
+}
+
+const MyOrders = () => {
+    const [orders, setOrders] = useState<Order[]>([]);
+    const [loading, setLoading] = useState(true);
+    const { token } = useAuth();
+
+    useEffect(() => {
+        const fetchOrders = async () => {
+            try {
+                const res = await fetch('http://localhost:5000/api/orders', {
+                    headers: { 'x-auth-token': token || '' }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    setOrders(data);
+                }
+            } catch (err) {
+                console.error("Failed to fetch orders", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (token) fetchOrders();
+    }, [token]);
+
+    const getStatusColor = (status: string) => {
+        switch (status) {
+            case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+            case 'accepted': return 'bg-blue-100 text-blue-800 border-blue-200';
+            case 'completed': return 'bg-green-100 text-green-800 border-green-200';
+            case 'declined': return 'bg-red-100 text-red-800 border-red-200';
+            default: return 'bg-gray-100 text-gray-800 border-gray-200';
+        }
+    };
+
+    const getStatusIcon = (status: string) => {
+        switch (status) {
+            case 'pending': return <Clock className="w-4 h-4" />;
+            case 'accepted': return <CheckCircle2 className="w-4 h-4" />;
+            case 'completed': return <CheckCircle2 className="w-4 h-4" />;
+            case 'declined': return <XCircle className="w-4 h-4" />;
+            default: return <Clock className="w-4 h-4" />;
+        }
+    };
+
+    if (loading) return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Loading...</div>;
+
+    return (
+        <div className="min-h-screen bg-gray-50">
+            <Navbar />
+            <main className="container mx-auto px-4 py-8">
+                <h1 className="text-2xl font-bold mb-6">My Orders</h1>
+
+                {orders.length === 0 ? (
+                    <div className="text-center py-20 bg-white rounded-2xl shadow-sm">
+                        <p className="text-gray-500">No orders found.</p>
+                    </div>
+                ) : (
+                    <div className="space-y-4">
+                        {orders.map((order) => (
+                            <div key={order._id} className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                                <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-4">
+                                    <div>
+                                        <h3 className="font-bold text-lg">{order.vendor?.name || 'Unknown Vendor'}</h3>
+                                        <p className="text-sm text-gray-500">
+                                            {new Date(order.date).toLocaleDateString()} at {new Date(order.date).toLocaleTimeString()}
+                                        </p>
+                                    </div>
+                                    <div className={`flex items-center gap-2 px-3 py-1 rounded-full border w-fit ${getStatusColor(order.status)}`}>
+                                        {getStatusIcon(order.status)}
+                                        <span className="text-sm font-medium capitalize">{order.status}</span>
+                                    </div>
+                                </div>
+
+                                <div className="border-t border-gray-100 my-4" />
+
+                                <div className="space-y-2">
+                                    {order.items.map((item, idx) => (
+                                        <div key={idx} className="flex justify-between text-sm">
+                                            <span className="text-gray-600">{item.quantity} x {item.name}</span>
+                                            <span className="font-medium">₹{item.price * item.quantity}</span>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                <div className="border-t border-gray-100 my-4" />
+
+                                <div className="flex justify-between items-center">
+                                    <div className="text-sm text-gray-500">
+                                        Payment: <span className="font-medium text-gray-900">{order.paymentMethod}</span>
+                                    </div>
+                                    <div className="text-lg font-bold">
+                                        Total: ₹{order.totalAmount}
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </main>
+        </div>
+    );
+};
+
+export default MyOrders;

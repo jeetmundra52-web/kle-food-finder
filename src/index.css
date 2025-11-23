@@ -8,7 +8,8 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 30 30% 98%;
+    /* Warmer, creamier background */
     --foreground: 20 14% 15%;
 
     --card: 0 0% 100%;
@@ -17,44 +18,35 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 20 14% 15%;
 
-    /* Warm amber/orange - main brand color for food/appetite */
-    --primary: 16 100% 60%;
+    /* Vibrant Orange - Appetizing and energetic */
+    --primary: 25 95% 53%;
     --primary-foreground: 0 0% 100%;
-    --primary-light: 16 100% 70%;
-    
-    /* Deep teal - campus trust vibe */
-    --secondary: 196 58% 42%;
+    --primary-light: 25 100% 65%;
+
+    /* Deep Teal - Trust and stability */
+    --secondary: 180 45% 25%;
     --secondary-foreground: 0 0% 100%;
-    
-    /* Fresh green - veg indicator */
-    --accent: 165 94% 43%;
+
+    /* Fresh Green - Healthy/Veg options */
+    --accent: 150 60% 45%;
     --accent-foreground: 0 0% 100%;
 
-    --muted: 30 20% 95%;
-    --muted-foreground: 20 10% 45%;
+    --muted: 30 20% 94%;
+    --muted-foreground: 25 10% 45%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 20 15% 90%;
-    --input: 20 15% 90%;
-    --ring: 16 100% 60%;
+    --border: 30 15% 90%;
+    --input: 30 15% 90%;
+    --ring: 25 95% 53%;
 
-    --radius: 0.75rem;
-    
+    --radius: 1rem;
+    /* More rounded corners */
+
     /* Gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(16 100% 60%) 0%, hsl(25 100% 55%) 100%);
-    --gradient-card: linear-gradient(to bottom right, hsl(0 0% 100%), hsl(30 20% 98%));
-    
-    /* Shadows */
-    --shadow-sm: 0 1px 2px 0 hsl(20 14% 15% / 0.05);
-    --shadow-md: 0 4px 6px -1px hsl(20 14% 15% / 0.1);
-    --shadow-lg: 0 10px 15px -3px hsl(20 14% 15% / 0.1);
-    --shadow-xl: 0 20px 25px -5px hsl(20 14% 15% / 0.1);
-    
-    /* Transitions */
-    --transition-base: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --gradient-hero: linear-gradient(135deg, hsl(25 95% 53%) 0%, hsl(35 100% 60%) 100%);
+    --gradient-card: linear-gradient(to bottom right, hsl(0 0% 100%), hsl(30 30% 99%));
   }
 
   .dark {
@@ -67,14 +59,14 @@ All colors MUST be HSL.
     --popover: 20 14% 10%;
     --popover-foreground: 30 20% 95%;
 
-    --primary: 16 100% 60%;
+    --primary: 25 95% 53%;
     --primary-foreground: 0 0% 100%;
-    --primary-light: 16 100% 70%;
+    --primary-light: 25 100% 65%;
 
-    --secondary: 196 58% 42%;
+    --secondary: 180 45% 25%;
     --secondary-foreground: 0 0% 100%;
 
-    --accent: 165 94% 43%;
+    --accent: 150 60% 45%;
     --accent-foreground: 0 0% 100%;
 
     --muted: 20 14% 15%;
@@ -85,7 +77,7 @@ All colors MUST be HSL.
 
     --border: 20 14% 20%;
     --input: 20 14% 20%;
-    --ring: 16 100% 60%;
+    --ring: 25 95% 53%;
   }
 }
 
@@ -95,6 +87,54 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+}
+
+@layer utilities {
+  .glass-card {
+    @apply bg-white/70 backdrop-blur-lg border border-white/20 shadow-xl;
+  }
+
+  .glass-nav {
+    @apply bg-white/80 backdrop-blur-md border-b border-white/20;
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary-light;
+  }
+
+  .animate-fade-in-up {
+    animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes float {
+
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(-10px);
+    }
   }
 }
