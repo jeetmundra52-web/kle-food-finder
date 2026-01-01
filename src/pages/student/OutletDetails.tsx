@@ -102,7 +102,14 @@ const OutletDetails = () => {
                                 </div>
                                 <p className="text-sm text-gray-500">{item.category}</p>
                                 <p className="text-xs text-gray-400 mt-1">{item.description}</p>
-                                <p className="font-medium mt-2">₹{item.price}</p>
+                                <div className="flex items-center gap-4 mt-2">
+                                    <p className="font-medium">₹{item.price}</p>
+                                    <div className="flex items-center gap-1 text-xs bg-yellow-50 px-2 py-0.5 rounded border border-yellow-200 text-yellow-700">
+                                        <Star className="w-3 h-3 fill-yellow-500 text-yellow-500" />
+                                        <span className="font-bold">{item.averageRating ? item.averageRating.toFixed(1) : '0.0'}</span>
+                                        <span className="text-yellow-600/70">({item.totalReviews || 0})</span>
+                                    </div>
+                                </div>
                             </div>
                             {cart.find((cartItem) => cartItem.id === (item._id || item.id)) ? (
                                 <div className="flex items-center gap-3 bg-green-50 border border-green-600 rounded-md px-2 py-1">

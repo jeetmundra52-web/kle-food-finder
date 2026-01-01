@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { CartProvider, useCart } from "@/context/CartContext";
 import VendorSwitchDialog from "@/components/VendorSwitchDialog";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import Landing from "./pages/Landing";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/auth/Login";
@@ -44,7 +45,11 @@ const AppContent = () => {
 
         {/* Vendor Routes */}
         <Route path="/vendor/login" element={<VendorLogin />} />
-        <Route path="/vendor/dashboard" element={<Dashboard />} />
+        <Route path="/vendor/dashboard" element={
+          <ProtectedRoute allowedRole="vendor">
+            <Dashboard />
+          </ProtectedRoute>
+        } />
 
         {/* Fallback */}
         <Route path="*" element={<NotFound />} />

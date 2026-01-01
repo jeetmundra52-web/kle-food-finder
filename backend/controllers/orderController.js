@@ -15,6 +15,15 @@ exports.createOrder = async (req, res) => {
         });
 
         await order.save();
+
+        // Populate student details for the socket event
+        const populatedOrder = await Order.findById(order._id).populate('student', 'name email');
+
+        // Emit socket event to the specific vendor's room
+        if (req.io) {
+            req.io.to(vendorId).emit('newOrder', populatedOrder);
+        }
+
         res.json(order);
     } catch (err) {
         console.error(err.message);
@@ -49,7 +58,8 @@ exports.updateOrderStatus = async (req, res) => {
         if (!order) return res.status(404).json({ msg: 'Order not found' });
 
         // Ensure user is the vendor of this order
-        if (order.vendor.toString() !== req.user.id) {
+        console.log(`[OrderAuth] OrderVendor: ${order.vendor}, RequestUser: ${req.user.id}`);
+        if (String(order.vendor) !== String(req.user.id)) {
             return res.status(401).json({ msg: 'Not authorized' });
         }
 

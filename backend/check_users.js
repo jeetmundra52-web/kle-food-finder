@@ -5,22 +5,23 @@ require('dotenv').config();
 const checkUsers = async () => {
     try {
         await mongoose.connect(process.env.MONGO_URI);
-        console.log('MongoDB Connected...');
+        console.log('Connected to DB');
 
-        const users = await User.find({});
-        console.log('--- User List ---');
-        users.forEach(user => {
-            console.log(`Name: ${user.name}`);
-            console.log(`Email: ${user.email}`);
-            console.log(`Role: ${user.role}`);
-            console.log(`ID: ${user._id}`);
-            console.log('-----------------');
-        });
-        console.log(`Total Users: ${users.length}`);
+        const userId = '6922df65519c15e469872270'; // The ID from the order
+        const user = await User.findById(userId);
 
-        mongoose.connection.close();
+        if (user) {
+            console.log(`User ${userId} FOUND: ${user.name}`);
+        } else {
+            console.log(`User ${userId} NOT FOUND`);
+        }
+
+        const allUsers = await User.find({});
+        console.log(`Total Users in DB: ${allUsers.length}`);
+
+        process.exit();
     } catch (err) {
-        console.error(err.message);
+        console.error(err);
         process.exit(1);
     }
 };

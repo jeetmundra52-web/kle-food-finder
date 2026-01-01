@@ -2,7 +2,7 @@ import { useState, useEffect, createContext, useContext, ReactNode } from 'react
 import { useNavigate } from 'react-router-dom';
 
 interface User {
-    id: number;
+    id: string;
     name: string;
     email: string;
     role: string;

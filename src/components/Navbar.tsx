@@ -22,21 +22,18 @@ const Navbar = () => {
                     {isAuthenticated ? (
                         <>
                             <span className="text-sm font-medium text-gray-600 hidden md:block">Welcome, {user?.name}</span>
-                            {user?.role === 'student' && (
-                                <>
-                                    <Link to="/student/outlets">
-                                        <Button variant="ghost" className="text-gray-600 hover:text-green-600">Outlets</Button>
-                                    </Link>
-                                    <Link to="/student/orders">
-                                        <Button variant="ghost" className="text-gray-600 hover:text-green-600">My Orders</Button>
-                                    </Link>
-                                    <Link to="/student/cart">
-                                        <Button variant="ghost" size="icon" className="relative">
-                                            <ShoppingCart className="h-5 w-5 text-gray-600" />
-                                        </Button>
-                                    </Link>
-                                </>
-                            )}
+                            <Link to="/student/outlets">
+                                <Button variant="ghost" className="text-gray-600 hover:text-green-600">Outlets</Button>
+                            </Link>
+                            <Link to="/student/orders">
+                                <Button variant="ghost" className="text-gray-600 hover:text-green-600">My Orders</Button>
+                            </Link>
+                            <Link to="/student/cart">
+                                <Button variant="ghost" size="icon" className="relative">
+                                    <ShoppingCart className="h-5 w-5 text-gray-600" />
+                                </Button>
+                            </Link>
+                            {/* Dashboard link removed as per user request */}
                             <Button variant="ghost" size="sm" onClick={logout} className="text-red-500 hover:text-red-600 hover:bg-red-50">
                                 <LogOut className="h-4 w-4 mr-2" /> Logout
                             </Button>

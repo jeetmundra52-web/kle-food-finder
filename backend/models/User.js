@@ -28,7 +28,9 @@ const UserSchema = new mongoose.Schema({
         price: { type: Number, required: true },
         category: { type: String, required: true },
         isVeg: { type: Boolean, default: true },
-        description: { type: String }
+        description: { type: String },
+        averageRating: { type: Number, default: 0 },
+        totalReviews: { type: Number, default: 0 }
     }],
     offers: [{
         code: { type: String, required: true },

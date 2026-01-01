@@ -1,7 +1,7 @@
 const User = require('../models/User');
 
-// Helper to generate consistent mock data based on vendor name
-const getMockDetails = (name) => {
+// Helper to generate consistent mock data based on vendor name, BUT with real ratings if available
+const getMockDetails = (name, menu = []) => {
     const images = [
         "https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=1000&auto=format&fit=crop",
         "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?q=80&w=1000&auto=format&fit=crop",
@@ -10,12 +10,29 @@ const getMockDetails = (name) => {
         "https://images.unsplash.com/photo-1493770348161-369560ae357d?q=80&w=1000&auto=format&fit=crop"
     ];
 
-    // Simple hash to pick a consistent image/rating
+    // Simple hash to pick a consistent image
     const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+
+    // Calculate real average rating from menu items
+    let calculatedRating = 0;
+    let totalRatedItems = 0;
+
+    if (menu && menu.length > 0) {
+        let sum = 0;
+        menu.forEach(item => {
+            if (item.averageRating > 0) {
+                sum += item.averageRating;
+                totalRatedItems++;
+            }
+        });
+        if (totalRatedItems > 0) {
+            calculatedRating = (sum / totalRatedItems).toFixed(1);
+        }
+    }
 
     return {
         image: images[hash % images.length],
-        rating: (4 + (hash % 10) / 10).toFixed(1), // 4.0 to 4.9
+        rating: calculatedRating > 0 ? calculatedRating : "New", // specific requirement from likely user intent
         deliveryTime: `${15 + (hash % 30)} min`,
         priceRange: "₹".repeat(1 + (hash % 3)),
         type: hash % 2 === 0 ? "Meals" : "Snacks",
@@ -30,7 +47,7 @@ exports.getOutlets = async (req, res) => {
         const vendors = await User.find({ role: 'vendor' });
 
         let result = vendors.map(vendor => {
-            const details = getMockDetails(vendor.name);
+            const details = getMockDetails(vendor.name, vendor.menu);
             return {
                 id: vendor._id,
                 name: vendor.name,
@@ -61,7 +78,11 @@ exports.getOutlets = async (req, res) => {
         // Sort
         if (sort) {
             if (sort === 'rating') {
-                result.sort((a, b) => b.rating - a.rating);
+                result.sort((a, b) => {
+                    const rA = a.rating === 'New' ? 0 : parseFloat(a.rating);
+                    const rB = b.rating === 'New' ? 0 : parseFloat(b.rating);
+                    return rB - rA;
+                });
             } else if (sort === 'price_low') {
                 result.sort((a, b) => a.priceRange.length - b.priceRange.length);
             } else if (sort === 'eta') {
@@ -82,7 +103,7 @@ exports.getOutletById = async (req, res) => {
         if (!vendor || vendor.role !== 'vendor') {
             return res.status(404).json({ msg: 'Outlet not found' });
         }
-        const details = getMockDetails(vendor.name);
+        const details = getMockDetails(vendor.name, vendor.menu);
         res.json({
             id: vendor._id,
             name: vendor.name,

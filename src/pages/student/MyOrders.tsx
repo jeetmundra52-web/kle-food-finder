@@ -4,6 +4,10 @@ import { useAuth } from "@/hooks/useAuth";
 import { Badge } from "@/components/ui/badge";
 import { Clock, CheckCircle2, XCircle, ChevronRight } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
+import ReviewModal from "@/components/ReviewModal";
+import { Star } from "lucide-react";
+
 interface OrderItem {
     name: string;
     quantity: number;
@@ -20,6 +24,7 @@ interface Order {
     status: 'pending' | 'accepted' | 'completed' | 'declined';
     date: string;
     paymentMethod: string;
+    isRated?: boolean;
 }
 
 const MyOrders = () => {
@@ -76,6 +81,33 @@ const MyOrders = () => {
         }
     };
 
+    const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+    const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+
+    const handleRateOrder = (order: Order) => {
+        setSelectedOrder(order);
+        setIsReviewModalOpen(true);
+    };
+
+    const handleReviewSubmitted = () => {
+        // Refresh orders to update isRated status
+        // We can just re-fetch or update locally. Re-fetching is safer.
+        const fetchOrders = async () => {
+            try {
+                const res = await fetch('http://localhost:5000/api/orders', {
+                    headers: { 'x-auth-token': token || '' }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    setOrders(data);
+                }
+            } catch (err) {
+                console.error("Failed to fetch orders", err);
+            }
+        };
+        fetchOrders();
+    };
+
     if (loading) return <div className="min-h-screen bg-gray-50 flex items-center justify-center">Loading...</div>;
 
     return (
@@ -99,9 +131,25 @@ const MyOrders = () => {
                                             {new Date(order.date).toLocaleDateString()} at {new Date(order.date).toLocaleTimeString()}
                                         </p>
                                     </div>
-                                    <div className={`flex items-center gap-2 px-3 py-1 rounded-full border w-fit ${getStatusColor(order.status)}`}>
-                                        {getStatusIcon(order.status)}
-                                        <span className="text-sm font-medium capitalize">{order.status}</span>
+                                    <div className="flex items-center gap-3">
+                                        <div className={`flex items-center gap-2 px-3 py-1 rounded-full border w-fit ${getStatusColor(order.status)}`}>
+                                            {getStatusIcon(order.status)}
+                                            <span className="text-sm font-medium capitalize">{order.status}</span>
+                                        </div>
+                                        {order.status === 'completed' && !order.isRated && (
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                onClick={() => handleRateOrder(order)}
+                                            >
+                                                Rate Order
+                                            </Button>
+                                        )}
+                                        {order.isRated && (
+                                            <Badge variant="secondary" className="bg-yellow-50 text-yellow-700 border-yellow-200">
+                                                <Star className="w-3 h-3 mr-1 fill-current" /> Rated
+                                            </Badge>
+                                        )}
                                     </div>
                                 </div>
 
@@ -131,6 +179,13 @@ const MyOrders = () => {
                     </div>
                 )}
             </main>
+
+            <ReviewModal
+                isOpen={isReviewModalOpen}
+                onClose={() => setIsReviewModalOpen(false)}
+                order={selectedOrder}
+                onReviewSubmitted={handleReviewSubmitted}
+            />
         </div>
     );
 };

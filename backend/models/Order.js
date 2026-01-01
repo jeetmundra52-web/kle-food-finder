@@ -25,6 +25,10 @@ const OrderSchema = new mongoose.Schema({
         enum: ['pending', 'accepted', 'completed', 'declined'],
         default: 'pending'
     },
+    isRated: {
+        type: Boolean,
+        default: false
+    },
     paymentMethod: {
         type: String,
         enum: ['UPI', 'Cash'],

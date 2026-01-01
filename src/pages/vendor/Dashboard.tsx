@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { io } from "socket.io-client";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -44,12 +45,22 @@ interface Offer {
     validUntil: string;
 }
 
+interface Review {
+    _id: string;
+    foodItemName: string;
+    rating: number;
+    comment: string;
+    student: { name: string };
+    date: string;
+}
+
 const VendorDashboard = () => {
     const { user, logout, token } = useAuth();
     const navigate = useNavigate();
     const [orders, setOrders] = useState<Order[]>([]);
     const [menu, setMenu] = useState<MenuItem[]>([]);
     const [offers, setOffers] = useState<Offer[]>([]);
+    const [reviews, setReviews] = useState<Review[]>([]);
     const [loading, setLoading] = useState(true);
     const [fetchError, setFetchError] = useState('');
 
@@ -72,16 +83,40 @@ const VendorDashboard = () => {
     const [activeTab, setActiveTab] = useState('orders');
 
     useEffect(() => {
+        console.log('Dashboard useEffect triggered', { token: !!token, user });
         if (token && user) {
+            console.log('Fetching data with user ID:', user.id);
+            // Verify ID is present
+            if (!user.id) {
+                console.error("User ID is missing from user object:", user);
+            }
             fetchOrders();
             fetchMenu();
             fetchOffers();
-
-            // Poll for new orders every 10 seconds
-            const interval = setInterval(fetchOrders, 10000);
-            return () => clearInterval(interval);
+            if (activeTab === 'reviews') fetchReviews();
         }
     }, [token, user]);
+
+    // Socket.io Connection
+    useEffect(() => {
+        // Safe ID access
+        const userId = user?.id || (user as any)?._id;
+
+        if (userId) {
+            const socket = io('http://localhost:5000');
+
+            socket.emit('joinOutlet', userId);
+
+            socket.on('newOrder', (newOrder: Order) => {
+                toast.success(`New order received from ${newOrder.student.name}!`);
+                setOrders(prev => [newOrder, ...prev]);
+            });
+
+            return () => {
+                socket.disconnect();
+            };
+        }
+    }, [user]);
 
     // Refetch when tab changes
     useEffect(() => {
@@ -89,8 +124,16 @@ const VendorDashboard = () => {
             if (activeTab === 'offers') fetchOffers();
             if (activeTab === 'menu') fetchMenu();
             if (activeTab === 'orders') fetchOrders();
+            if (activeTab === 'reviews') fetchReviews();
         }
     }, [activeTab, token, user]);
+
+    // Helper to get User ID safely
+    const getUserId = () => {
+        if (!user) return null;
+        // Handle both id (from auth controller) and _id (raw mongoose doc)
+        return user.id || (user as any)._id;
+    };
 
     const fetchOrders = async () => {
         try {
@@ -107,8 +150,13 @@ const VendorDashboard = () => {
     };
 
     const fetchMenu = async () => {
+        const userId = getUserId();
+        if (!userId) {
+            console.error("Cannot fetch menu: User ID missing");
+            return;
+        }
         try {
-            const res = await fetch(`http://localhost:5000/api/outlets/${user?.id}/menu`, {
+            const res = await fetch(`http://localhost:5000/api/outlets/${userId}/menu`, {
                 headers: { 'x-auth-token': token || '' }
             });
             if (res.ok) {
@@ -123,9 +171,12 @@ const VendorDashboard = () => {
     };
 
     const fetchOffers = async () => {
+        const userId = getUserId();
+        if (!userId) return;
+
         try {
             setFetchError('');
-            const res = await fetch(`http://localhost:5000/api/outlets/${user?.id}`, {
+            const res = await fetch(`http://localhost:5000/api/outlets/${userId}`, {
                 headers: { 'x-auth-token': token || '' }
             });
             if (res.ok) {
@@ -143,8 +194,26 @@ const VendorDashboard = () => {
         }
     };
 
+    const fetchReviews = async () => {
+        const userId = getUserId();
+        if (!userId) return;
+
+        try {
+            const res = await fetch(`http://localhost:5000/api/reviews/vendor/${userId}`, {
+                headers: { 'x-auth-token': token || '' }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setReviews(data);
+            }
+        } catch (err) {
+            console.error('Fetch reviews error:', err);
+        }
+    };
+
     const updateOrderStatus = async (orderId: string, status: string) => {
         try {
+            console.log(`Updating order ${orderId} to status: ${status}`);
             const res = await fetch(`http://localhost:5000/api/orders/${orderId}/status`, {
                 method: 'PUT',
                 headers: {
@@ -153,11 +222,24 @@ const VendorDashboard = () => {
                 },
                 body: JSON.stringify({ status })
             });
+
             if (res.ok) {
-                toast.success(`Order ${status}`);
+                toast.success(`Order marked as ${status}`);
+                // Optimistically update the UI immediately
+                setOrders(prevOrders =>
+                    prevOrders.map(order =>
+                        order._id === orderId ? { ...order, status: status as any } : order
+                    )
+                );
+                // Background fetch to ensure sync
                 fetchOrders();
+            } else {
+                const errText = await res.text();
+                console.error("Order update failed:", errText);
+                toast.error("Failed to update status");
             }
         } catch (err) {
+            console.error("Order update error:", err);
             toast.error("Failed to update status");
         }
     };
@@ -335,10 +417,11 @@ const VendorDashboard = () => {
                 </div>
 
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                    <TabsList className="grid w-full max-w-md grid-cols-3 mb-8">
+                    <TabsList className="grid w-full max-w-md grid-cols-4 mb-8">
                         <TabsTrigger value="orders">Orders</TabsTrigger>
                         <TabsTrigger value="menu">Menu</TabsTrigger>
                         <TabsTrigger value="offers">Offers</TabsTrigger>
+                        <TabsTrigger value="reviews">Reviews</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="orders" className="space-y-6">
@@ -540,11 +623,18 @@ const VendorDashboard = () => {
                                     <CardContent className="p-4">
                                         <div className="flex justify-between items-start mb-2">
                                             <h3 className="font-bold text-lg text-orange-700">{offer.code}</h3>
-                                            <Badge className="bg-orange-500">{offer.discount}% OFF</Badge>
+                                            <div className="flex gap-2">
+                                                {offer.validUntil && new Date(offer.validUntil) < new Date(new Date().setHours(0, 0, 0, 0)) && (
+                                                    <Badge variant="destructive" className="bg-red-500">Expired</Badge>
+                                                )}
+                                                <Badge className="bg-orange-500">{offer.discount}% OFF</Badge>
+                                            </div>
                                         </div>
                                         <p className="text-gray-600 text-sm mb-3">{offer.description}</p>
                                         <div className="flex justify-between items-center text-xs text-gray-500">
-                                            <span>Valid until: {offer.validUntil ? new Date(offer.validUntil).toLocaleDateString() : 'No expiry'}</span>
+                                            <span className={offer.validUntil && new Date(offer.validUntil) < new Date(new Date().setHours(0, 0, 0, 0)) ? "text-red-500 font-medium" : ""}>
+                                                Valid until: {offer.validUntil ? new Date(offer.validUntil).toLocaleDateString() : 'No expiry'}
+                                            </span>
                                             <Button size="icon" variant="ghost" onClick={() => handleDeleteClick(offer._id)}>
                                                 <Trash2 className="w-4 h-4 text-red-600" />
                                             </Button>
@@ -557,6 +647,42 @@ const VendorDashboard = () => {
                                     <Tag className="w-12 h-12 mx-auto mb-4 opacity-50" />
                                     <p>No active offers. Create one to attract students!</p>
                                 </div>
+                            )}
+                        </div>
+                    </TabsContent>
+
+                    <TabsContent value="reviews" className="space-y-6">
+                        <h2 className="text-xl font-bold mb-4">Customer Reviews</h2>
+                        <div className="grid gap-4">
+                            {reviews.length === 0 ? (
+                                <div className="text-center py-12 text-gray-500">
+                                    <p>No reviews yet.</p>
+                                </div>
+                            ) : (
+                                reviews.map((review) => (
+                                    <Card key={review._id}>
+                                        <CardContent className="p-4">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <div>
+                                                    <p className="font-semibold text-gray-900">{review.foodItemName}</p>
+                                                    <p className="text-xs text-gray-500">by {review.student?.name || 'Anonymous'}</p>
+                                                </div>
+                                                <div className="flex items-center gap-1 bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-bold">
+                                                    <span>{review.rating}</span>
+                                                    <span className="text-xs">★</span>
+                                                </div>
+                                            </div>
+                                            {review.comment && (
+                                                <p className="text-sm text-gray-700 italic border-l-2 border-gray-200 pl-3 my-2">
+                                                    "{review.comment}"
+                                                </p>
+                                            )}
+                                            <p className="text-xs text-gray-400 mt-2">
+                                                {new Date(review.date).toLocaleDateString()} at {new Date(review.date).toLocaleTimeString()}
+                                            </p>
+                                        </CardContent>
+                                    </Card>
+                                ))
                             )}
                         </div>
                     </TabsContent>

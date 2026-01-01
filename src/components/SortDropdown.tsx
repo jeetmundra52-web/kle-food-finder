@@ -20,7 +20,6 @@ const SortDropdown = ({ value, onChange }: SortDropdownProps) => {
             <SelectContent>
                 <SelectItem value="rating">Rating: High to Low</SelectItem>
                 <SelectItem value="price_low">Price: Low to High</SelectItem>
-                <SelectItem value="eta">Delivery Time</SelectItem>
             </SelectContent>
         </Select>
     );

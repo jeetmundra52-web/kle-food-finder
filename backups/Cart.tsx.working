@@ -49,7 +49,12 @@ const Cart = () => {
             });
             if (res.ok) {
                 const data = await res.json();
-                setOffers(data.offers || []);
+                // Filter out expired offers
+                const activeOffers = (data.offers || []).filter((offer: any) => {
+                    if (!offer.validUntil) return true;
+                    return new Date(offer.validUntil) >= new Date(new Date().setHours(0, 0, 0, 0));
+                });
+                setOffers(activeOffers);
             }
         } catch (err) {
             console.error("Failed to fetch offers", err);
