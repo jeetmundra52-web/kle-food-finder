@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { Store, User, TrendingUp, Utensils, ChevronRight, ShieldCheck, Zap, Star } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Outlet {
   _id: string;
@@ -18,6 +19,7 @@ interface Outlet {
 
 const Landing = () => {
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [featuredOutlets, setFeaturedOutlets] = useState<Outlet[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -43,6 +45,13 @@ const Landing = () => {
     fetchFeaturedOutlets();
   }, []);
 
+  const scrollToAbout = () => {
+    const aboutSection = document.getElementById('about');
+    if (aboutSection) {
+      aboutSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className="min-h-screen font-sans selection:bg-primary/20 overflow-x-hidden relative">
       {/* Background Image with Overlay */}
@@ -65,10 +74,20 @@ const Landing = () => {
             </div>
           </div>
           <div className="flex items-center gap-6">
-            <Button variant="ghost" className="text-gray-800 hover:text-primary hover:bg-white/50 font-medium hidden sm:flex transition-colors">About</Button>
-            <Button className="bg-gray-900 hover:bg-black text-white shadow-xl shadow-black/10 rounded-full px-6 py-5 font-semibold transition-all hover:scale-105 active:scale-95" onClick={() => navigate('/auth/login')}>
-              Get Started
-            </Button>
+            <Button variant="ghost" className="text-gray-800 hover:text-primary hover:bg-white/50 font-medium hidden sm:flex transition-colors" onClick={scrollToAbout}>About</Button>
+            {isAuthenticated ? (
+              <Button
+                variant="ghost"
+                className="text-gray-800 hover:text-primary hover:bg-white/50 font-medium transition-colors outlets-nav-link"
+                onClick={() => navigate('/student/outlets')}
+              >
+                Outlets
+              </Button>
+            ) : (
+              <Button className="bg-gray-900 hover:bg-black text-white shadow-xl shadow-black/10 rounded-full px-6 py-5 font-semibold transition-all hover:scale-105 active:scale-95" onClick={() => navigate('/auth/login')}>
+                Get Started
+              </Button>
+            )}
           </div>
         </div>
       </header>
@@ -237,37 +256,63 @@ const Landing = () => {
               ))
             ) : featuredOutlets.length > 0 ? (
               // Real outlets
-              featuredOutlets.map((outlet) => (
-                <Card
-                  key={outlet._id}
-                  className="group overflow-hidden border border-white/50 shadow-lg hover:shadow-xl transition-all duration-300 bg-white/60 backdrop-blur-xl rounded-2xl cursor-pointer hover:-translate-y-1"
-                  onClick={() => navigate('/auth/login')}
-                >
-                  <div className="h-48 bg-gradient-to-br from-orange-100 to-orange-50 relative overflow-hidden">
-                    {(outlet.banner || outlet.image) ? (
-                      <img
-                        src={outlet.banner || outlet.image}
-                        alt={outlet.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <Store className="w-16 h-16 text-orange-300" />
-                      </div>
-                    )}
-                  </div>
-                  <div className="p-4">
-                    <h3 className="text-lg font-bold text-gray-900 mb-1 truncate">{outlet.name}</h3>
-                    <p className="text-sm text-gray-600 mb-3 line-clamp-1">{outlet.description}</p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold bg-green-100 text-green-700 px-2 py-1 rounded flex items-center gap-1">
-                        {outlet.rating} <Star className="w-3 h-3 fill-current" />
-                      </span>
-                      <span className="text-xs text-gray-500">{outlet.deliveryTime}</span>
+              featuredOutlets.map((outlet) => {
+                let imageUrl = outlet.banner || outlet.image;
+                const specializedOutlets = [
+                  'Doughpaze', 'Ethnic Flavours', 'Spice Story', 'Chow King', 'Gapa Gup',
+                  'Chai Paani', 'Wow Franky, Wraps and Sandwich', 'Crazy Corn Juice and Snacks',
+                  'The Bake Hub', 'Leafy Life: Fresh and Healthy Bowls'
+                ];
+
+                if (outlet.name === 'Doughpaze') imageUrl = '/doughpaze-logo.png';
+                if (outlet.name === 'Ethnic Flavours') imageUrl = '/ethnic-flavours-logo.png';
+                if (outlet.name === 'Spice Story') imageUrl = '/spice-story-logo.png';
+                if (outlet.name === 'Chow King') imageUrl = '/chow-king-logo.png';
+                if (outlet.name === 'Gapa Gup') imageUrl = '/gapa-gup-logo.png';
+                if (outlet.name === 'Chai Paani') imageUrl = '/chai-paani-logo.png';
+                if (outlet.name === 'Wow Franky, Wraps and Sandwich') imageUrl = '/wow-franky-logo.png';
+                if (outlet.name === 'Crazy Corn Juice and Snacks') imageUrl = '/crazy-corn-logo.png';
+                if (outlet.name === 'The Bake Hub') imageUrl = '/the-bake-hub-logo.png';
+                if (outlet.name === 'Leafy Life: Fresh and Healthy Bowls') imageUrl = '/leafy-life-logo.png';
+
+                return (
+                  <Card
+                    key={outlet._id}
+                    className="group overflow-hidden border border-gray-100/80 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] transition-all duration-500 bg-[#fefefe] rounded-[2.5rem] cursor-pointer hover:-translate-y-1.5"
+                    onClick={() => navigate('/auth/login')}
+                  >
+                    <div className="h-44 bg-[#f8fafc] subtle-noise relative overflow-hidden">
+                      <div className="absolute inset-0 opacity-[0.05] pointer-events-none" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40' fill='%23000000' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E")` }} />
+                      {imageUrl ? (
+                        <img
+                          src={imageUrl}
+                          alt={outlet.name}
+                          className={`w-full h-full transition-all duration-700 ease-[cubic-bezier(0.23,1,0.32,1)] ${specializedOutlets.includes(outlet.name)
+                            ? 'object-contain p-0 scale-150 group-hover:scale-[1.65]'
+                            : 'object-cover group-hover:scale-110'
+                            }`}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-orange-50 to-orange-100/50">
+                          <Store className="w-14 h-14 text-orange-200" />
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/5 via-transparent to-transparent opacity-40 group-hover:opacity-100 transition-opacity duration-500" />
                     </div>
-                  </div>
-                </Card>
-              ))
+                    <div className="p-5 bg-white/40 backdrop-blur-sm">
+                      <h3 className="text-xl font-extrabold text-gray-900 group-hover:text-primary transition-colors mb-2 truncate tracking-tight">{outlet.name}</h3>
+                      <p className="text-sm text-gray-500/90 font-medium mb-4 line-clamp-1">{outlet.description}</p>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5 bg-[#f0fdf4] px-2.5 py-0.5 rounded-full border border-[#dcfce7]">
+                          <span className="text-[11px] font-black text-[#166534]">{outlet.rating}</span>
+                          <Star className="w-3 h-3 fill-[#166534] text-[#166534]" />
+                        </div>
+                        <span className="text-[11px] text-gray-400 font-bold uppercase tracking-wider">{outlet.deliveryTime}</span>
+                      </div>
+                    </div>
+                  </Card>
+                );
+              })
             ) : (
               // Fallback if no outlets
               [1, 2, 3].map((i) => (
@@ -286,6 +331,55 @@ const Landing = () => {
                 </Card>
               ))
             )}
+          </div>
+        </div>
+
+        {/* About Section */}
+        <div id="about" className="max-w-5xl mx-auto mt-24 mb-16 scroll-mt-24">
+          <div className="bg-white/80 backdrop-blur-md rounded-[2.5rem] p-8 md:p-12 shadow-xl border border-white/50 relative overflow-hidden">
+            <div className="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-orange-100 rounded-full blur-3xl opacity-50"></div>
+            <div className="absolute bottom-0 left-0 -mb-16 -ml-16 w-64 h-64 bg-teal-100 rounded-full blur-3xl opacity-50"></div>
+
+            <div className="relative z-10 grid md:grid-cols-2 gap-12 items-center">
+              <div className="space-y-6">
+                <div className="inline-block px-4 py-1.5 rounded-full bg-orange-100 text-orange-700 text-sm font-bold tracking-wide uppercase">
+                  Our Story
+                </div>
+                <h2 className="text-4xl md:text-5xl font-extrabold text-gray-900 leading-tight">
+                  Revolutionizing <br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-600 to-orange-400">Campus Dining</span>
+                </h2>
+                <p className="text-gray-600 text-lg leading-relaxed">
+                  The Hub was built with a simple mission: to make campus dining smarter, faster, and more enjoyable for everyone at KLE.
+                </p>
+                <p className="text-gray-600 text-lg leading-relaxed">
+                  We connect students directly with campus outlets, enabling seamless ordering, real-time tracking, and verified reviews. No more long queues or uncertainty—just great food delivered to your fingertips.
+                </p>
+              </div>
+
+              <div className="relative">
+                <div className="aspect-square rounded-2xl overflow-hidden shadow-2xl rotate-3 hover:rotate-0 transition-transform duration-500">
+                  <img
+                    src="/landing-bg-v3.png"
+                    alt="Campus dining experience"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="absolute -bottom-6 -left-6 bg-white p-6 rounded-2xl shadow-xl border border-gray-100 max-w-xs -rotate-3 hover:rotate-0 transition-transform duration-500 hidden md:block">
+                  <div className="flex items-center gap-4 mb-3">
+                    <div className="flex -space-x-2">
+                      {[1, 2, 3].map((i) => (
+                        <div key={i} className="w-8 h-8 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center overflow-hidden">
+                          <User className="w-5 h-5 text-gray-400" />
+                        </div>
+                      ))}
+                    </div>
+                    <span className="text-sm font-bold text-gray-700">Join 2000+ Students</span>
+                  </div>
+                  <p className="text-xs text-gray-500 italic">"The Hub has completely changed how I grab lunch between classes!"</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 

@@ -112,6 +112,20 @@ const VendorDashboard = () => {
                 setOrders(prev => [newOrder, ...prev]);
             });
 
+            socket.on('newReview', (newReview: Review) => {
+                console.log('[Socket] Received new review:', newReview);
+                setReviews(prev => [newReview, ...prev]);
+                // Also update the menu item rating in state if the menu tab is open
+                setMenu(prevMenu => prevMenu.map(item => {
+                    if (item.name === newReview.foodItemName) {
+                        // This is a partial update, but helps UI keep in sync
+                        // Better to refetch menu if we want exact precision
+                        return { ...item };
+                    }
+                    return item;
+                }));
+            });
+
             return () => {
                 socket.disconnect();
             };
@@ -372,46 +386,48 @@ const VendorDashboard = () => {
     const completedOrders = orders.filter(o => o.status === 'completed');
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <header className="sticky top-0 z-50 bg-white border-b shadow-sm">
-                <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-                    <div className="flex items-center gap-3">
-                        <Store className="h-6 w-6 text-orange-600" />
+        <div className="min-h-screen mesh-gradient">
+            <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100/50 shadow-sm">
+                <div className="container mx-auto px-6 py-5 flex justify-between items-center">
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-orange-600 flex items-center justify-center shadow-lg shadow-primary/20">
+                            <Store className="h-6 w-6 text-white" />
+                        </div>
                         <div>
-                            <h1 className="text-xl font-bold text-gray-900">{user?.name}</h1>
-                            <p className="text-xs text-gray-500">Vendor Dashboard v2</p>
+                            <h1 className="text-xl font-black text-gray-900 tracking-tight">{user?.name}</h1>
+                            <p className="text-xs text-gray-500 font-bold uppercase tracking-widest">Vendor Dashboard v3</p>
                         </div>
                     </div>
-                    <Button variant="ghost" size="icon" onClick={() => { logout(); navigate('/'); }}>
-                        <LogOut className="h-5 w-5 text-gray-500" />
+                    <Button variant="ghost" size="icon" className="hover:bg-gray-100" onClick={() => { logout(); navigate('/'); }}>
+                        <LogOut className="h-5 w-5 text-gray-600" />
                     </Button>
                 </div>
             </header>
 
             <main className="container mx-auto px-4 py-8">
-                <div className="grid md:grid-cols-4 gap-4 mb-8">
-                    <Card>
-                        <CardContent className="p-4">
-                            <p className="text-sm text-gray-500">Today's Orders</p>
-                            <p className="text-3xl font-bold">{orders.length}</p>
+                <div className="grid md:grid-cols-4 gap-6 mb-8">
+                    <Card className="bg-white/80 backdrop-blur-sm border-gray-100/80 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] transition-all duration-500 rounded-[2rem]">
+                        <CardContent className="p-6 space-y-3">
+                            <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Today's Orders</p>
+                            <p className="text-4xl font-black text-gray-900 tracking-tighter">{orders.length}</p>
                         </CardContent>
                     </Card>
-                    <Card>
-                        <CardContent className="p-4">
-                            <p className="text-sm text-gray-500">Revenue</p>
-                            <p className="text-3xl font-bold">₹{orders.reduce((acc, curr) => acc + curr.totalAmount, 0)}</p>
+                    <Card className="bg-white/80 backdrop-blur-sm border-gray-100/80 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] transition-all duration-500 rounded-[2rem]">
+                        <CardContent className="p-6 space-y-3">
+                            <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Revenue</p>
+                            <p className="text-4xl font-black text-gray-900 tracking-tighter">₹{orders.reduce((acc, curr) => acc + curr.totalAmount, 0)}</p>
                         </CardContent>
                     </Card>
-                    <Card>
-                        <CardContent className="p-4">
-                            <p className="text-sm text-gray-500">Pending</p>
-                            <p className="text-3xl font-bold text-orange-600">{pendingOrders.length}</p>
+                    <Card className="bg-gradient-to-br from-orange-50 to-orange-100/50 backdrop-blur-sm border-orange-100 shadow-[0_4px_20px_rgba(249,115,22,0.1)] hover:shadow-[0_20px_40px_rgba(249,115,22,0.15)] transition-all duration-500 rounded-[2rem]">
+                        <CardContent className="p-6 space-y-3">
+                            <p className="text-xs font-black text-orange-600 uppercase tracking-widest">Pending</p>
+                            <p className="text-4xl font-black text-primary tracking-tighter">{pendingOrders.length}</p>
                         </CardContent>
                     </Card>
-                    <Card>
-                        <CardContent className="p-4">
-                            <p className="text-sm text-gray-500">Completed</p>
-                            <p className="text-3xl font-bold text-green-600">{completedOrders.length}</p>
+                    <Card className="bg-gradient-to-br from-green-50 to-green-100/50 backdrop-blur-sm border-green-100 shadow-[0_4px_20px_rgba(34,197,94,0.1)] hover:shadow-[0_20px_40px_rgba(34,197,94,0.15)] transition-all duration-500 rounded-[2rem]">
+                        <CardContent className="p-6 space-y-3">
+                            <p className="text-xs font-black text-green-600 uppercase tracking-widest">Completed</p>
+                            <p className="text-4xl font-black text-green-700 tracking-tighter">{completedOrders.length}</p>
                         </CardContent>
                     </Card>
                 </div>

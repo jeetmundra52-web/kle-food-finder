@@ -28,11 +28,13 @@ exports.addReview = async (req, res) => {
         }
 
         // 3. Validate User
+        // 3. Validate User
         const s1 = String(order.student);
         const s2 = String(req.user.id);
-        console.log(`[ReviewAuthDebug] '${s1}' vs '${s2}' match? ${s1 === s2}`);
+        console.log(`[ReviewAuthDebug] Checking authorization: Order Student ID='${s1}', Request User ID='${s2}'`);
+
         if (s1 !== s2) {
-            console.log(`[ReviewAuthFail] Mismatch!`);
+            console.error(`[ReviewAuthFail] ID Mismatch! Student who ordered: ${s1}, Student trying to review: ${s2}`);
             return res.status(401).json({ msg: 'User not authorized to review this order' });
         }
 
@@ -41,11 +43,14 @@ exports.addReview = async (req, res) => {
             return res.status(404).json({ msg: 'Vendor not found' });
         }
 
+        const submittedReviews = [];
+
         // Process each review
         for (const reviewData of reviews) {
             // Validate rating range
             if (reviewData.rating < 1 || reviewData.rating > 5) {
-                continue; // Or return error? Let's skip invalid ones or clamp. Better to skip.
+                console.warn(`[ReviewAdd] Skipping invalid rating: ${reviewData.rating} for item ${reviewData.foodItemName}`);
+                continue;
             }
 
             // Create Review Document
@@ -54,25 +59,24 @@ exports.addReview = async (req, res) => {
                 student: req.user.id,
                 vendor: order.vendor,
                 foodItemName: reviewData.foodItemName,
-                rating: reviewData.rating,
+                rating: parseInt(reviewData.rating), // Ensure number
                 comment: reviewData.comment
             });
-            await review.save();
+            const savedReview = await review.save();
+            submittedReviews.push(savedReview);
 
             // Update Vendor Menu Item Stats
-            // Find the specific menu item
             const menuItem = vendor.menu.find(item => item.name === reviewData.foodItemName);
             if (menuItem) {
-                // Calculate new average
-                // New Average = ((Current Avg * Total Reviews) + New Rating) / (Total Reviews + 1)
                 const currentTotal = menuItem.totalReviews || 0;
                 const currentAvg = menuItem.averageRating || 0;
 
                 const newTotal = currentTotal + 1;
-                const newAvg = ((currentAvg * currentTotal) + reviewData.rating) / newTotal;
+                const newAvg = ((currentAvg * currentTotal) + parseInt(reviewData.rating)) / newTotal;
 
                 menuItem.totalReviews = newTotal;
                 menuItem.averageRating = newAvg;
+                console.log(`[ReviewAdd] Updated stats for ${menuItem.name}: New Avg=${newAvg.toFixed(2)}, Total=${newTotal}`);
             }
         }
 
@@ -83,10 +87,30 @@ exports.addReview = async (req, res) => {
         order.isRated = true;
         await order.save();
 
-        res.json({ msg: 'Reviews submitted successfully' });
+        // Emit real-time events via Socket.io
+        if (req.io) {
+            // 1. Notify all students on the outlet page to update ratings
+            req.io.to(String(order.vendor)).emit('ratingUpdated', {
+                vendorId: order.vendor,
+                menu: vendor.menu
+            });
+            console.log(`[Socket] Emitted ratingUpdated for outlet ${order.vendor}`);
+
+            // 2. Notify the vendor specifically with new reviews
+            // We'll populate the student name for the review event
+            const student = await User.findById(req.user.id).select('name');
+            submittedReviews.forEach(rev => {
+                const revObj = rev.toObject();
+                revObj.student = { name: student.name };
+                req.io.to(String(order.vendor)).emit('newReview', revObj);
+            });
+            console.log(`[Socket] Emitted newReview events for vendor ${order.vendor}`);
+        }
+
+        res.json({ msg: 'Reviews submitted successfully', reviews: submittedReviews });
 
     } catch (err) {
-        console.error(err.message);
+        console.error('[ReviewAddError]', err.message);
         res.status(500).send('Server error');
     }
 }

@@ -11,6 +11,7 @@ import Landing from "./pages/Landing";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
+import ForgotPassword from "./pages/auth/ForgotPassword";
 import OutletsList from "./pages/student/OutletsList";
 import OutletDetails from "./pages/student/OutletDetails";
 import Menu from "./pages/student/Menu";
@@ -35,6 +36,7 @@ const AppContent = () => {
         {/* Auth Routes */}
         <Route path="/auth/login" element={<Login />} />
         <Route path="/auth/register" element={<Register />} />
+        <Route path="/auth/forgot-password" element={<ForgotPassword />} />
 
         {/* Student Routes */}
         <Route path="/student/outlets" element={<OutletsList />} />

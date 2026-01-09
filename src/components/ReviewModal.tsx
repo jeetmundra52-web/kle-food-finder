@@ -47,17 +47,29 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ isOpen, onClose, order, onRev
 
         try {
             const token = localStorage.getItem('token');
+            if (!token) {
+                toast.error("You are not authenticated. Please login again.");
+                return;
+            }
+
+            console.log(`[ReviewSubmit] Submitting reviews with token: ${token.substring(0, 10)}...`);
+
             const response = await fetch('http://localhost:5000/api/reviews', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'x-auth-token': token || ''
+                    'x-auth-token': token
                 },
                 body: JSON.stringify({
                     orderId: order._id,
                     reviews
                 })
             });
+
+            if (response.status === 401) {
+                toast.error("Session expired or unauthorized. Please re-login.");
+                return;
+            }
 
             if (!response.ok) {
                 const errorData = await response.json();
@@ -68,7 +80,7 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ isOpen, onClose, order, onRev
             onReviewSubmitted();
             onClose();
         } catch (error: any) {
-            console.error(error);
+            console.error("[ReviewSubmitError]", error);
             toast.error(error.message);
         } finally {
             setIsSubmitting(false);
@@ -94,8 +106,8 @@ const ReviewModal: React.FC<ReviewModalProps> = ({ isOpen, onClose, order, onRev
                                         type="button"
                                         onClick={() => handleRatingChange(item.name, star)}
                                         className={`p-1 transition-colors ${(ratings[item.name] || 0) >= star
-                                                ? 'text-yellow-500 fill-yellow-500'
-                                                : 'text-gray-300'
+                                            ? 'text-yellow-500 fill-yellow-500'
+                                            : 'text-gray-300'
                                             }`}
                                     >
                                         <Star className={`w-6 h-6 ${(ratings[item.name] || 0) >= star ? 'fill-current' : ''}`} />

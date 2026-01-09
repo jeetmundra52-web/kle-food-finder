@@ -1,10 +1,13 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useCart } from '@/context/CartContext';
 import { Button } from '@/components/ui/button';
 import { Utensils, ShoppingCart, LogOut } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 const Navbar = () => {
     const { user, logout, isAuthenticated } = useAuth();
+    const { itemCount } = useCart();
 
     return (
         <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-orange-100/50 shadow-sm">
@@ -23,7 +26,7 @@ const Navbar = () => {
                         <>
                             <span className="text-sm font-medium text-gray-600 hidden md:block">Welcome, {user?.name}</span>
                             <Link to="/student/outlets">
-                                <Button variant="ghost" className="text-gray-600 hover:text-green-600">Outlets</Button>
+                                <Button variant="ghost" className="text-gray-600 hover:text-green-600 outlets-nav-link">Outlets</Button>
                             </Link>
                             <Link to="/student/orders">
                                 <Button variant="ghost" className="text-gray-600 hover:text-green-600">My Orders</Button>
@@ -31,6 +34,14 @@ const Navbar = () => {
                             <Link to="/student/cart">
                                 <Button variant="ghost" size="icon" className="relative">
                                     <ShoppingCart className="h-5 w-5 text-gray-600" />
+                                    {itemCount > 0 && (
+                                        <Badge
+                                            id="cartCount"
+                                            className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-orange-600 text-white border-white scale-90"
+                                        >
+                                            {itemCount}
+                                        </Badge>
+                                    )}
                                 </Button>
                             </Link>
                             {/* Dashboard link removed as per user request */}

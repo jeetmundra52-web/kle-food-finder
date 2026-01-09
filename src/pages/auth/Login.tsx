@@ -83,6 +83,7 @@ const Login = () => {
                             <div className="relative group">
                                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 group-focus-within:text-primary transition-colors" />
                                 <Input
+                                    id="email-input"
                                     type="email"
                                     placeholder="Email Address"
                                     value={email}
@@ -95,6 +96,7 @@ const Login = () => {
                                 <div className="relative group">
                                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500 group-focus-within:text-primary transition-colors" />
                                     <Input
+                                        id="password-input"
                                         type={showPassword ? "text" : "password"}
                                         placeholder="Password"
                                         value={password}
@@ -122,6 +124,7 @@ const Login = () => {
                         </div>
 
                         <Button
+                            id="login-button"
                             type="submit"
                             className="w-full bg-gradient-to-r from-gray-900 to-black hover:from-black hover:to-gray-900 text-white shadow-lg shadow-black/10 rounded-xl h-11 font-semibold text-sm transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-2"
                             disabled={loading}

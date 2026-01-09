@@ -38,7 +38,7 @@ const OutletsList = () => {
     }, [search, type, isVeg, sort, token]);
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen mesh-gradient">
             <Navbar />
             <main className="container mx-auto px-4 py-8">
                 <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-8">

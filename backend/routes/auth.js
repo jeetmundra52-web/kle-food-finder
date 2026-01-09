@@ -20,4 +20,14 @@ router.get('/user', auth, (req, res) => {
     res.json(req.user);
 });
 
+// @route   POST api/auth/verify-user
+// @desc    Verify USN exists
+// @access  Public
+router.post('/verify-user', authController.verifyUser);
+
+// @route   POST api/auth/reset-password-data
+// @desc    Reset password directly
+// @access  Public
+router.post('/reset-password-data', authController.resetPasswordData);
+
 module.exports = router;

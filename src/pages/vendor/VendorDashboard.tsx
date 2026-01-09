@@ -3,10 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useNavigate } from "react-router-dom";
-import { 
-  Store, 
-  Package, 
-  Clock, 
+import {
+  Store,
+  Package,
+  Clock,
   CheckCircle2,
   AlertCircle,
   TrendingUp,
@@ -48,21 +48,23 @@ const VendorDashboard = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen mesh-gradient">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-card border-b backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-4">
+      <header className="sticky top-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-100/50 shadow-sm">
+        <div className="container mx-auto px-6 py-5">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Store className="h-6 w-6 text-secondary" />
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-orange-600 flex items-center justify-center shadow-lg shadow-primary/20">
+                <Store className="h-6 w-6 text-white" />
+              </div>
               <div>
-                <h1 className="text-xl font-bold">South Indian Express</h1>
-                <p className="text-xs text-muted-foreground">Vendor Dashboard</p>
+                <h1 className="text-xl font-black text-gray-900 tracking-tight">South Indian Express</h1>
+                <p className="text-xs text-gray-500 font-bold uppercase tracking-widest">Vendor Dashboard</p>
               </div>
             </div>
-            
-            <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
-              <LogOut className="h-5 w-5" />
+
+            <Button variant="ghost" size="icon" className="hover:bg-gray-100" onClick={() => navigate("/")}>
+              <LogOut className="h-5 w-5 text-gray-600" />
             </Button>
           </div>
         </div>
@@ -72,45 +74,45 @@ const VendorDashboard = () => {
       <main className="container mx-auto px-4 py-8">
         <div className="space-y-8">
           {/* Stats Overview */}
-          <div className="grid md:grid-cols-4 gap-4">
-            <Card className="p-4">
-              <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">Today's Orders</p>
-                <p className="text-3xl font-bold text-foreground">24</p>
-                <div className="flex items-center gap-1 text-xs text-accent">
-                  <TrendingUp className="h-3 w-3" />
+          <div className="grid md:grid-cols-4 gap-6">
+            <Card className="p-6 bg-white/80 backdrop-blur-sm border-gray-100/80 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] transition-all duration-500 rounded-[2rem]">
+              <div className="space-y-3">
+                <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Today's Orders</p>
+                <p className="text-4xl font-black text-gray-900 tracking-tighter">24</p>
+                <div className="flex items-center gap-1.5 text-xs text-green-600 font-bold">
+                  <TrendingUp className="h-3.5 w-3.5" />
                   <span>+12% from yesterday</span>
                 </div>
               </div>
             </Card>
-            
-            <Card className="p-4">
-              <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">Revenue</p>
-                <p className="text-3xl font-bold text-foreground">₹3,240</p>
-                <p className="text-xs text-muted-foreground">Last 24 hours</p>
+
+            <Card className="p-6 bg-white/80 backdrop-blur-sm border-gray-100/80 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)] transition-all duration-500 rounded-[2rem]">
+              <div className="space-y-3">
+                <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Revenue</p>
+                <p className="text-4xl font-black text-gray-900 tracking-tighter">₹3,240</p>
+                <p className="text-xs text-gray-500 font-bold">Last 24 hours</p>
               </div>
             </Card>
-            
-            <Card className="p-4">
-              <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">Pending</p>
-                <p className="text-3xl font-bold text-primary">{pendingOrders.length}</p>
-                <p className="text-xs text-muted-foreground">Needs attention</p>
+
+            <Card className="p-6 bg-gradient-to-br from-orange-50 to-orange-100/50 backdrop-blur-sm border-orange-100 shadow-[0_4px_20px_rgba(249,115,22,0.1)] hover:shadow-[0_20px_40px_rgba(249,115,22,0.15)] transition-all duration-500 rounded-[2rem]">
+              <div className="space-y-3">
+                <p className="text-xs font-black text-orange-600 uppercase tracking-widest">Pending</p>
+                <p className="text-4xl font-black text-primary tracking-tighter">{pendingOrders.length}</p>
+                <p className="text-xs text-orange-700 font-bold">Needs attention</p>
               </div>
             </Card>
-            
-            <Card className="p-4">
-              <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">Completed</p>
-                <p className="text-3xl font-bold text-accent">18</p>
-                <p className="text-xs text-muted-foreground">Today</p>
+
+            <Card className="p-6 bg-gradient-to-br from-green-50 to-green-100/50 backdrop-blur-sm border-green-100 shadow-[0_4px_20px_rgba(34,197,94,0.1)] hover:shadow-[0_20px_40px_rgba(34,197,94,0.15)] transition-all duration-500 rounded-[2rem]">
+              <div className="space-y-3">
+                <p className="text-xs font-black text-green-600 uppercase tracking-widest">Completed</p>
+                <p className="text-4xl font-black text-green-700 tracking-tighter">18</p>
+                <p className="text-xs text-green-700 font-bold">Today</p>
               </div>
             </Card>
           </div>
 
           {/* Orders Management */}
-          <Card className="p-6">
+          <Card className="p-8 bg-white/80 backdrop-blur-sm border-gray-100/80 shadow-[0_4px_20px_rgba(0,0,0,0.03)] rounded-[2.5rem]">
             <Tabs defaultValue="pending" className="w-full">
               <TabsList className="grid w-full max-w-md grid-cols-3">
                 <TabsTrigger value="pending">
@@ -132,7 +134,7 @@ const VendorDashboard = () => {
                   </div>
                 ) : (
                   pendingOrders.map((order) => (
-                    <Card key={order.id} className="p-4">
+                    <Card key={order.id} className="p-5 bg-white border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 rounded-2xl">
                       <div className="space-y-4">
                         <div className="flex items-start justify-between">
                           <div className="space-y-1">
@@ -174,7 +176,7 @@ const VendorDashboard = () => {
 
               <TabsContent value="active" className="space-y-4 mt-6">
                 {activeOrders.map((order) => (
-                  <Card key={order.id} className="p-4">
+                  <Card key={order.id} className="p-5 bg-white border-gray-100 shadow-sm hover:shadow-md transition-all duration-300 rounded-2xl">
                     <div className="space-y-4">
                       <div className="flex items-start justify-between">
                         <div className="space-y-1">

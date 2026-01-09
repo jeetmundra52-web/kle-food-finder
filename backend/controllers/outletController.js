@@ -1,7 +1,8 @@
 const User = require('../models/User');
+const Review = require('../models/Review');
 
-// Helper to generate consistent mock data based on vendor name, BUT with real ratings if available
-const getMockDetails = (name, menu = []) => {
+// Helper to generate consistent mock details, accepting an explicit real rating
+const getMockDetails = (name, menu = [], realRating = null) => {
     const images = [
         "https://images.unsplash.com/photo-1554118811-1e0d58224f24?q=80&w=1000&auto=format&fit=crop",
         "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?q=80&w=1000&auto=format&fit=crop",
@@ -13,26 +14,32 @@ const getMockDetails = (name, menu = []) => {
     // Simple hash to pick a consistent image
     const hash = name.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
 
-    // Calculate real average rating from menu items
-    let calculatedRating = 0;
-    let totalRatedItems = 0;
+    // Use provided real rating if available, otherwise fallback to menu calculation (which might be stale, but kept for safety)
+    let finalRating = realRating;
 
-    if (menu && menu.length > 0) {
-        let sum = 0;
-        menu.forEach(item => {
-            if (item.averageRating > 0) {
-                sum += item.averageRating;
-                totalRatedItems++;
+    if (finalRating === null) {
+        // Fallback logic
+        let calculatedRating = 0;
+        let totalRatedItems = 0;
+
+        if (menu && menu.length > 0) {
+            let sum = 0;
+            menu.forEach(item => {
+                if (item.averageRating > 0) {
+                    sum += item.averageRating;
+                    totalRatedItems++;
+                }
+            });
+            if (totalRatedItems > 0) {
+                calculatedRating = (sum / totalRatedItems).toFixed(1);
             }
-        });
-        if (totalRatedItems > 0) {
-            calculatedRating = (sum / totalRatedItems).toFixed(1);
         }
+        finalRating = calculatedRating;
     }
 
     return {
         image: images[hash % images.length],
-        rating: calculatedRating > 0 ? calculatedRating : "New", // specific requirement from likely user intent
+        rating: finalRating > 0 ? Number(finalRating).toFixed(1) : "New",
         deliveryTime: `${15 + (hash % 30)} min`,
         priceRange: "₹".repeat(1 + (hash % 3)),
         type: hash % 2 === 0 ? "Meals" : "Snacks",
@@ -46,8 +53,25 @@ exports.getOutlets = async (req, res) => {
     try {
         const vendors = await User.find({ role: 'vendor' });
 
+        // 1. Calculate Real-Time Ratings for ALL vendors
+        const ratings = await Review.aggregate([
+            {
+                $group: {
+                    _id: "$vendor",
+                    avgRating: { $avg: "$rating" }
+                }
+            }
+        ]);
+
+        // Map vendorId -> avgRating
+        const ratingMap = {};
+        ratings.forEach(r => {
+            ratingMap[r._id.toString()] = r.avgRating;
+        });
+
         let result = vendors.map(vendor => {
-            const details = getMockDetails(vendor.name, vendor.menu);
+            const realRating = ratingMap[vendor._id.toString()] || 0;
+            const details = getMockDetails(vendor.name, vendor.menu, realRating);
             return {
                 id: vendor._id,
                 name: vendor.name,
@@ -103,7 +127,16 @@ exports.getOutletById = async (req, res) => {
         if (!vendor || vendor.role !== 'vendor') {
             return res.status(404).json({ msg: 'Outlet not found' });
         }
-        const details = getMockDetails(vendor.name, vendor.menu);
+
+        // Calculate Real-Time Rating for THIS vendor
+        const ratingAgg = await Review.aggregate([
+            { $match: { vendor: vendor._id } },
+            { $group: { _id: "$vendor", avgRating: { $avg: "$rating" } } }
+        ]);
+
+        const realRating = ratingAgg.length > 0 ? ratingAgg[0].avgRating : 0;
+        const details = getMockDetails(vendor.name, vendor.menu, realRating);
+
         res.json({
             id: vendor._id,
             name: vendor.name,
